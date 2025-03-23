@@ -1,0 +1,7 @@
+=== 成功处理的文件 ===
+C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06829.ARW
+C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06830.ARW
+C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06831.ARW
+C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06832.ARW
+
+=== 处理失败的文件 ===
