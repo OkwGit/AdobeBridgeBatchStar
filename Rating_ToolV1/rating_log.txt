@@ -1,7 +1,12 @@
 === 成功处理的文件 ===
-C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06829.ARW
-C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06830.ARW
-C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06831.ARW
-C:\Users\oxpas\Documents\GitAuth\AdobeBridgeBatchStar\testimages\rawtest\DSC06832.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC06930.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07328.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07332.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07339.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07414.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07424.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07433.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07489.ARW
+E:\A7M4_SDCARD\———Cosplay返图——\12150315（ 文豪野犬  cmc friday\NO LABLES原片2\DSC07501.ARW
 
 === 处理失败的文件 ===
