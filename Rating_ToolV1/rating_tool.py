@@ -34,43 +34,54 @@ def get_file_basenames(folder_path, extensions=None):
         
     return files, basenames
 
-def find_matching_raw_files(raw_folder, basenames):
-    """在RAW文件夹中查找匹配的RAW文件"""
+def find_matching_files(main_folder, basenames_to_match):
+    """在主文件夹中查找所有与指定基本名称匹配的文件（不区分大小写，不限扩展名）"""
     matching_files = []
-    raw_extensions = ['.arw', '.raw', '.ARW', '.RAW']
-    
-    all_raw_files = []
-    for ext in raw_extensions:
-        all_raw_files.extend(list(Path(raw_folder).glob(f"*{ext}")))
-    
-    for basename in basenames:
-        for raw_file in all_raw_files:
-            if raw_file.stem.lower() == basename.lower():
-                matching_files.append(raw_file)
-                break
-    
+    basenames_lower = {b.lower() for b in basenames_to_match} # Use a set for faster lookups
+
+    try:
+        for item in Path(main_folder).iterdir():
+            if item.is_file():
+                if item.stem.lower() in basenames_lower:
+                    matching_files.append(item)
+    except Exception as e:
+        print(f"查找匹配文件时出错: {e}")
+
     return matching_files
 
 def set_rating_with_exiftool(files, rating=4):
     """使用ExifTool为文件设置星级评级"""
     success_files = []
     failed_files = []
-    
+
+    # Get the likely console encoding, default to utf-8 if unsure
+    console_encoding = sys.stdout.encoding or sys.getfilesystemencoding() or 'utf-8'
+
     for file in files:
         try:
-            cmd = ['exiftool', f'-XMP:Rating={rating}', '-overwrite_original', str(file)]
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            
+            file_path_raw_str = str(file)
+            file_path_str = file_path_raw_str.replace('\u200e', '')
+            cmd = ['exiftool', f'-XMP:Rating={rating}', '-overwrite_original', file_path_str]
+
+            # Run exiftool, capturing raw bytes for stdout/stderr
+            result = subprocess.run(cmd, capture_output=True, check=False) # Removed text=True, encoding='utf-8'
+
             if result.returncode == 0:
-                success_files.append(str(file))
-                print(f"成功: {file}")
+                success_files.append(file_path_str)
+                # Decode stdout for success message (optional, using detected encoding with fallback)
+                # stdout_msg = result.stdout.decode(console_encoding, errors='replace').strip()
+                # print(f"成功: {file_path_str} ({stdout_msg})")
+                print(f"成功: {file_path_str}") # Simpler success message
             else:
-                failed_files.append(str(file))
-                print(f"失败: {file} - {result.stderr}")
+                failed_files.append(file_path_str)
+                # Decode stderr using detected encoding (or fallback) only on error
+                stderr_output = result.stderr.decode(console_encoding, errors='replace').strip()
+                original_vs_sanitized = f"{file_path_raw_str}" if file_path_raw_str == file_path_str else f"{file_path_raw_str} (Sanitized: {file_path_str})"
+                print(f"失败: {original_vs_sanitized} - {stderr_output}")
         except Exception as e:
             failed_files.append(str(file))
             print(f"处理文件时出错: {file} - {e}")
-    
+
     return success_files, failed_files
 
 def write_log(success_files, failed_files):
@@ -106,12 +117,30 @@ def main():
         print("安装说明: https://exiftool.org/install.html")
         return
     
-    # 获取低质量JPEG文件夹路径
-    jpeg_folder = input("请输入低质量JPEG文件夹路径: ").strip()
+    # --- REVISED Path Input Logic ---
+    jpeg_folder_raw = input("请输入低质量JPEG文件夹路径: ").strip()
+    jpeg_folder = jpeg_folder_raw.replace('\u200e', '') # Attempt to sanitize
+
+    # Check if the sanitized path exists
     if not os.path.isdir(jpeg_folder):
-        print(f"错误: 文件夹 '{jpeg_folder}' 不存在或不是一个有效的目录")
-        return
-    
+        # If sanitized failed, check if the raw path (with bad char) exists
+        if os.path.isdir(jpeg_folder_raw):
+             # If the raw path exists, the folder name *on disk* is the problem
+             print(f"\n错误: 检测到文件夹名称包含特殊（可能隐藏）的字符 (U+200E):")
+             print(f"  '{jpeg_folder_raw}'")
+             print(f"虽然脚本可能找到此文件夹，但 ExifTool 无法处理带有此字符的路径。")
+             print(f"请在文件浏览器中重命名此文件夹，确保名称开头没有隐藏字符，然后重试脚本。")
+             input("\n按Enter键退出...") # Keep window open
+             return # Exit script
+        else:
+            # Neither path exists
+            print(f"错误: 文件夹 '{jpeg_folder_raw}' 不存在或不是一个有效的目录")
+            return
+    elif jpeg_folder != jpeg_folder_raw:
+        # Sanitized path exists, but was different from raw input (warn user)
+        print(f"警告: 输入的路径包含特殊字符，已清理为 '{jpeg_folder}'。将使用此清理后的路径。")
+        print(f"     原始输入: '{jpeg_folder_raw}'")
+
     # 获取JPEG文件列表
     jpeg_extensions = ['.jpg', '.jpeg', '.JPG', '.JPEG']
     jpeg_files, jpeg_basenames = get_file_basenames(jpeg_folder, jpeg_extensions)
@@ -126,25 +155,43 @@ def main():
     if len(jpeg_files) > 10:
         print(f"... 以及其他 {len(jpeg_files) - 10} 个文件")
     
-    # 获取主RAW文件夹路径
-    raw_folder = input("\n请输入主RAW文件夹路径: ").strip()
-    if not os.path.isdir(raw_folder):
-        print(f"错误: 文件夹 '{raw_folder}' 不存在或不是一个有效的目录")
+    # --- REVISED Path Input Logic ---
+    main_folder_raw = input("\n请输入包含要评级文件的主文件夹路径: ").strip()
+    main_folder = main_folder_raw.replace('\u200e', '') # Attempt to sanitize
+
+    # Check if the sanitized path exists
+    if not os.path.isdir(main_folder):
+        # If sanitized failed, check if the raw path (with bad char) exists
+        if os.path.isdir(main_folder_raw):
+             # If the raw path exists, the folder name *on disk* is the problem
+             print(f"\n错误: 检测到文件夹名称包含特殊（可能隐藏）的字符 (U+200E):")
+             print(f"  '{main_folder_raw}'")
+             print(f"虽然脚本可能找到此文件夹，但 ExifTool 无法处理带有此字符的路径。")
+             print(f"请在文件浏览器中重命名此文件夹，确保名称开头没有隐藏字符，然后重试脚本。")
+             input("\n按Enter键退出...") # Keep window open
+             return # Exit script
+        else:
+            # Neither path exists
+            print(f"错误: 文件夹 '{main_folder_raw}' 不存在或不是一个有效的目录")
+            return
+    elif main_folder != main_folder_raw:
+         # Sanitized path exists, but was different from raw input (warn user)
+        print(f"警告: 输入的路径包含特殊字符，已清理为 '{main_folder}'。将使用此清理后的路径。")
+        print(f"     原始输入: '{main_folder_raw}'")
+
+    # 查找匹配的文件
+    print(f"\n正在 '{main_folder}' 中查找匹配的文件...")
+    matching_files = find_matching_files(main_folder, jpeg_basenames)
+    
+    if not matching_files:
+        print(f"未找到任何匹配的文件")
         return
     
-    # 查找匹配的RAW文件
-    print(f"\n正在 '{raw_folder}' 中查找匹配的RAW文件...")
-    matching_raw_files = find_matching_raw_files(raw_folder, jpeg_basenames)
-    
-    if not matching_raw_files:
-        print(f"未找到任何匹配的RAW文件")
-        return
-    
-    print(f"\n找到 {len(matching_raw_files)} 个匹配的RAW文件:")
-    for file in matching_raw_files[:10]:  # 只显示前10个文件
+    print(f"\n找到 {len(matching_files)} 个匹配的文件:")
+    for file in matching_files[:10]:  # 只显示前10个文件
         print(f"- {file}")
-    if len(matching_raw_files) > 10:
-        print(f"... 以及其他 {len(matching_raw_files) - 10} 个文件")
+    if len(matching_files) > 10:
+        print(f"... 以及其他 {len(matching_files) - 10} 个文件")
     
     # 询问星级评级
     try:
@@ -157,14 +204,14 @@ def main():
         rating = 4
     
     # 用户确认
-    confirm = input(f"\n确认为这 {len(matching_raw_files)} 个RAW文件设置 {rating} 星级评级? (y/n): ").strip().lower()
+    confirm = input(f"\n确认为这 {len(matching_files)} 个文件设置 {rating} 星级评级? (y/n): ").strip().lower()
     if confirm != 'y':
         print("操作已取消")
         return
     
     # 设置星级评级
     print("\n正在设置星级评级...")
-    success_files, failed_files = set_rating_with_exiftool(matching_raw_files, rating)
+    success_files, failed_files = set_rating_with_exiftool(matching_files, rating)
     
     # 输出结果
     print(f"\n处理完成:")
