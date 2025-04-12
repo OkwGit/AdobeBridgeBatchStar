@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, scrolledtext
+from tkinter import ttk, filedialog, messagebox, scrolledtext, font
 from pathlib import Path
 import threading
 
@@ -19,53 +19,64 @@ class RatingToolApp:
     def __init__(self, root):
         self.root = root
         self.root.title("图片批量星级标记工具")
-        self.root.geometry("800x600")
+        self.root.geometry("900x650")
+        
+        # 设置更好的字体
+        default_font = font.nametofont("TkDefaultFont")
+        default_font.configure(size=11)
+        text_font = font.Font(family="Microsoft YaHei UI", size=11)
+        
+        # 设置全局字体样式
+        style = ttk.Style()
+        style.configure("TLabel", font=("Microsoft YaHei UI", 11))
+        style.configure("TButton", font=("Microsoft YaHei UI", 11))
+        style.configure("TLabelframe.Label", font=("Microsoft YaHei UI", 11, "bold"))
         
         # 创建主框架
-        main_frame = ttk.Frame(root, padding="10")
+        main_frame = ttk.Frame(root, padding="12")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # 文件夹选择部分
-        folder_frame = ttk.LabelFrame(main_frame, text="文件夹选择", padding="10")
-        folder_frame.pack(fill=tk.X, pady=5)
+        folder_frame = ttk.LabelFrame(main_frame, text="文件夹选择", padding="12")
+        folder_frame.pack(fill=tk.X, pady=8)
         
         # JPEG文件夹选择
-        ttk.Label(folder_frame, text="低质量JPEG文件夹:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(folder_frame, text="低质量JPEG文件夹:").grid(row=0, column=0, sticky=tk.W, pady=8)
         self.jpeg_folder_var = tk.StringVar()
-        ttk.Entry(folder_frame, textvariable=self.jpeg_folder_var, width=50).grid(row=0, column=1, sticky=tk.W)
-        ttk.Button(folder_frame, text="浏览...", command=self.browse_jpeg_folder).grid(row=0, column=2, padx=5)
+        ttk.Entry(folder_frame, textvariable=self.jpeg_folder_var, width=50, font=text_font).grid(row=0, column=1, sticky=tk.W)
+        ttk.Button(folder_frame, text="浏览...", command=self.browse_jpeg_folder).grid(row=0, column=2, padx=8)
         
         # 主文件夹选择
-        ttk.Label(folder_frame, text="RAW文件主文件夹:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(folder_frame, text="RAW文件主文件夹:").grid(row=1, column=0, sticky=tk.W, pady=8)
         self.main_folder_var = tk.StringVar()
-        ttk.Entry(folder_frame, textvariable=self.main_folder_var, width=50).grid(row=1, column=1, sticky=tk.W)
-        ttk.Button(folder_frame, text="浏览...", command=self.browse_main_folder).grid(row=1, column=2, padx=5)
+        ttk.Entry(folder_frame, textvariable=self.main_folder_var, width=50, font=text_font).grid(row=1, column=1, sticky=tk.W)
+        ttk.Button(folder_frame, text="浏览...", command=self.browse_main_folder).grid(row=1, column=2, padx=8)
         
         # 星级选择
-        rating_frame = ttk.LabelFrame(main_frame, text="星级设置", padding="10")
-        rating_frame.pack(fill=tk.X, pady=5)
+        rating_frame = ttk.LabelFrame(main_frame, text="星级设置", padding="12")
+        rating_frame.pack(fill=tk.X, pady=8)
         
-        ttk.Label(rating_frame, text="星级评级 (1-5):").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(rating_frame, text="星级评级 (1-5):").grid(row=0, column=0, sticky=tk.W, pady=8)
         self.rating_var = tk.IntVar(value=4)
         rating_scale = ttk.Scale(rating_frame, from_=1, to=5, variable=self.rating_var, orient=tk.HORIZONTAL)
-        rating_scale.grid(row=0, column=1, sticky=tk.EW, padx=5)
-        self.rating_spinbox = ttk.Spinbox(rating_frame, from_=1, to=5, textvariable=self.rating_var, width=5)
-        self.rating_spinbox.grid(row=0, column=2, padx=5)
+        rating_scale.grid(row=0, column=1, sticky=tk.EW, padx=8)
+        self.rating_spinbox = ttk.Spinbox(rating_frame, from_=1, to=5, textvariable=self.rating_var, width=5, font=text_font)
+        self.rating_spinbox.grid(row=0, column=2, padx=8)
         
         # 操作按钮
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=10)
+        button_frame.pack(fill=tk.X, pady=12)
         
-        ttk.Button(button_frame, text="扫描文件", command=self.scan_files).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="设置星级", command=self.set_rating).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="清除日志", command=self.clear_log).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(button_frame, text="扫描文件", command=self.scan_files, width=15).pack(side=tk.LEFT, padx=8)
+        ttk.Button(button_frame, text="设置星级", command=self.set_rating, width=15).pack(side=tk.LEFT, padx=8)
+        ttk.Button(button_frame, text="清除日志", command=self.clear_log, width=15).pack(side=tk.RIGHT, padx=8)
         
         # 文件列表框架
-        files_frame = ttk.LabelFrame(main_frame, text="匹配的文件", padding="10")
-        files_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        files_frame = ttk.LabelFrame(main_frame, text="匹配的文件", padding="12")
+        files_frame.pack(fill=tk.BOTH, expand=True, pady=8)
         
         # 创建带滚动条的列表框
-        self.file_list = tk.Listbox(files_frame)
+        self.file_list = tk.Listbox(files_frame, font=text_font)
         scrollbar = ttk.Scrollbar(files_frame, orient=tk.VERTICAL, command=self.file_list.yview)
         self.file_list.configure(yscrollcommand=scrollbar.set)
         
@@ -73,15 +84,15 @@ class RatingToolApp:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # 日志区域
-        log_frame = ttk.LabelFrame(main_frame, text="处理日志", padding="10")
-        log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+        log_frame = ttk.LabelFrame(main_frame, text="处理日志", padding="12")
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=8)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=10)
+        self.log_text = scrolledtext.ScrolledText(log_frame, height=10, font=text_font)
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # 状态栏
         self.status_var = tk.StringVar(value="就绪")
-        status_bar = ttk.Label(root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
+        status_bar = ttk.Label(root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W, font=text_font)
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         
         # 存储匹配文件
@@ -89,6 +100,13 @@ class RatingToolApp:
         
         # 检查ExifTool
         self.check_exiftool()
+        
+        # 设置高DPI感知（减少模糊）
+        try:
+            from ctypes import windll
+            windll.shcore.SetProcessDpiAwareness(1)
+        except:
+            pass
 
     def log(self, message):
         """向日志区域添加消息"""
