@@ -1,3 +1,5 @@
+WORKS WITH ADOBLE BRIDGE
+
 ![147a1fe8c5ecf7d94afd844df214757](https://github.com/user-attachments/assets/d32de92f-9b3f-46b1-be3f-3648bdaecd62)
 这工具是干嘛的？
 想象一下，你拍了一堆照片（比如 RAW 格式），然后导出了一批小的 JPEG 用来快速筛选。你在这些 JPEG 里挑出了想要的，现在想给对应的原始 RAW 文件（或其他主文件）打上星级（比如 4 星），方便以后在 Adobe Bridge、Lightroom 或其他软件里查看。手动一个个找太麻烦了，这个脚本就是自动帮你干这事。
