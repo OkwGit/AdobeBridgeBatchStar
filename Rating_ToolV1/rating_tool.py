@@ -37,7 +37,7 @@ def get_file_basenames(folder_path, extensions=None):
 def find_matching_raw_files(raw_folder, basenames):
     """在RAW文件夹中查找匹配的RAW文件"""
     matching_files = []
-    raw_extensions = ['.arw', '.raw', '.ARW', '.RAW']
+    raw_extensions = ['.arw', '.raw', '.ARW', '.RAW', '.nef', '.NEF']
     
     all_raw_files = []
     for ext in raw_extensions:
